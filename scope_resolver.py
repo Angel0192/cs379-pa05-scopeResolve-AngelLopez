@@ -27,5 +27,25 @@ def resolve_name(
     Any other mode raises ValueError. Raise SemanticError if `name`
     cannot be resolved under the requested mode.
     """
-    # TODO
-    raise NotImplementedError
+    # mode validation
+    if mode not in ("static", "dynamic"):
+        raise ValueError("Mode must be exactly 'static' or 'dynamic")
+
+    # Static mode
+    if mode == "static":
+        return current_env.resolve(name)
+    
+    # Dynamic mode
+    if mode == "dynamic":
+        for caller_env in reversed(call_stack):
+            if name in caller_env._names:
+                return caller_env._names[name]
+
+        global_env = current_env
+        while global_env.parent is not None:
+            global_env = global_env.parent
+        
+        if name in global_env._names:
+            return global_env._names[name]
+
+        raise SemanticError(f"Name '{name}' not found dynamically.")
